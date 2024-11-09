@@ -4,6 +4,7 @@ import os
 
 # Setze die benötigten Intents
 intents = discord.Intents.default()
+intents.message_content = True  # Falls du Nachrichteninhalte lesen möchtest
 intents.members = True  # Benötigt, um Mitgliederereignisse zu erhalten
 intents.guilds = True   # Benötigt, um Guild-Events zu erhalten
 intents.voice_states = True  # Benötigt für Sprachkanal-Events
