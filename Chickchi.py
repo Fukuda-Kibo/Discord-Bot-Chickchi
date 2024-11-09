@@ -1,10 +1,11 @@
-﻿import discord
+import discord
 from discord.ext import commands, tasks
 import os
+from flask import Flask
+from threading import Thread
 
 # Setze die benötigten Intents
 intents = discord.Intents.default()
-intents.message_content = True  # Falls du Nachrichteninhalte lesen möchtest
 intents.members = True  # Benötigt, um Mitgliederereignisse zu erhalten
 intents.guilds = True   # Benötigt, um Guild-Events zu erhalten
 intents.voice_states = True  # Benötigt für Sprachkanal-Events
@@ -77,5 +78,21 @@ async def on_ready():
     print(f'Bot ist eingeloggt als {bot.user}')
     check_channels.start()  # Startet die Hintergrundaufgabe
 
+# Flask-Server für den Health Check
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "I'm alive!"  # Einfacher Health-Check-Endpoint
+
+# Funktion, um den Flask-Server im Hintergrund auszuführen
+def run():
+    app.run(host='0.0.0.0', port=8080)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
+
 # Bot Token einfügen (sicher in einer Umgebungsvariablen speichern)
+keep_alive()  # Flask-Server starten
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))
