@@ -3,6 +3,8 @@ from discord.ext import commands, tasks
 import os
 from flask import Flask
 from threading import Thread
+from werkzeug.serving import run_simple
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 # Setze die benötigten Intents
 intents = discord.Intents.default()
@@ -51,18 +53,14 @@ async def on_voice_state_update(member, before, after):
 
 # Funktion zur Aktualisierung des Kanalnamens
 async def update_channel_name(channel):
-    # Ermitteln der niedrigsten Rolle im Kanal
-    lowest_role = get_lowest_role_in_channel(channel)
-    # Ursprünglichen Namen ohne Zusatz verwenden
-    base_name = channel.name.split("-")[0]  # Basisname ohne Zusatz
-    # Wenn eine Rolle vorhanden ist, füge den Namen und das Emoji hinzu
-    if lowest_role:
+    try:
+        lowest_role = get_lowest_role_in_channel(channel)
+        base_name = channel.name.split("-")[0]
         new_name = f'{base_name}-{lowest_role}' if lowest_role else base_name
-    else:
-        new_name = base_name  # Kein Zusatz, wenn keine Rolle vorhanden ist
-    # Nur ändern, wenn der Name anders ist
-    if channel.name != new_name:
-        await channel.edit(name=new_name)
+        if channel.name != new_name:
+            await channel.edit(name=new_name)
+    except discord.DiscordException as e:
+        print(f"Fehler beim Aktualisieren des Kanalnamens: {e}")
 
 # Hintergrundaufgabe, die alle 10 Minuten die Sprachkanäle überprüft
 @tasks.loop(minutes=10)
@@ -86,11 +84,13 @@ def home():
     return "I'm alive!"  # Einfacher Health-Check-Endpoint
 
 # Funktion, um den Flask-Server im Hintergrund auszuführen
-def run():
-    app.run(host='0.0.0.0', port=8080)
+def run_flask():
+    # Hier verwenden wir `run_simple` für den Produktionsbetrieb
+    run_simple('0.0.0.0', 8080, app, use_reloader=False, use_debugger=False)
 
+# Funktion, die den Flask-Server im Hintergrund ausführt
 def keep_alive():
-    t = Thread(target=run)
+    t = Thread(target=run_flask)
     t.start()
 
 # Bot Token einfügen (sicher in einer Umgebungsvariablen speichern)
