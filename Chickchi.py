@@ -77,4 +77,4 @@ async def on_ready():
     check_channels.start()  # Startet die Hintergrundaufgabe
 
 # Bot Token einfügen (sicher in einer Umgebungsvariablen speichern)
-bot.run('MTMwMzc3NDUyMTU1NTI4ODEzNw.GBkafc.vL8G9OrWNYn9BiV3cLkmr2547LXJUxMUoSO2Mo')
+bot.run(os.getenv("DISCORD_BOT_TOKEN"))
