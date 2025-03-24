@@ -4,7 +4,6 @@ import os
 from flask import Flask
 from threading import Thread
 from werkzeug.serving import run_simple
-from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 # Setze die benötigten Intents
 intents = discord.Intents.default()
@@ -70,11 +69,17 @@ async def check_channels():
             if channel.id in voice_channel_ids:
                 await update_channel_name(channel)
 
-# Startet die Hintergrundaufgabe, wenn der Bot bereit ist
+# Hintergrundaufgabe, die jede Minute eine Nachricht ausgibt
+@tasks.loop(minutes=1)
+async def heartbeat():
+    print("Hi, ich bin Chickchi und ich lebe noch.")
+
+# Startet die Hintergrundaufgaben, wenn der Bot bereit ist
 @bot.event
 async def on_ready():
     print(f'Bot ist eingeloggt als {bot.user}')
-    check_channels.start()  # Startet die Hintergrundaufgabe
+    check_channels.start()  # Startet die Kanalüberprüfung
+    heartbeat.start()  # Startet den Heartbeat-Loop
 
 # Flask-Server für den Health Check
 app = Flask('')
@@ -85,7 +90,6 @@ def home():
 
 # Funktion, um den Flask-Server im Hintergrund auszuführen
 def run_flask():
-    # Hier verwenden wir `run_simple` für den Produktionsbetrieb
     run_simple('0.0.0.0', 8080, app, use_reloader=False, use_debugger=False)
 
 # Funktion, die den Flask-Server im Hintergrund ausführt
